@@ -8,10 +8,9 @@ exports.sendFollowersNotification = functions
     const payload = {
         notification : {
             title : "Unread messages",
-            body : "New messages in the lobby",
-            tag: "FRIENDLY_NOTIFICATION_CHANNEL",
-            sound : "default"
-        }
+            body : "New messages in the lobby"
+        },
+        topic : 'news'
     }
     return admin
         .database()

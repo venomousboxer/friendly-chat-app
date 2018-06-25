@@ -1,18 +1,4 @@
-/**
- * Copyright Google Inc. All Rights Reserved.
- * <p/>
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- * <p/>
- * http://www.apache.org/licenses/LICENSE-2.0
- * <p/>
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+
 package com.google.firebase.codelab.friendlychat;
 
 import android.content.Intent;
@@ -56,6 +42,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
@@ -80,10 +67,10 @@ public class MainActivity extends AppCompatActivity
 
         public MessageViewHolder(View v) {
             super(v);
-            messageTextView = (TextView) itemView.findViewById(R.id.messageTextView);
-            messageImageView = (ImageView) itemView.findViewById(R.id.messageImageView);
-            messengerTextView = (TextView) itemView.findViewById(R.id.messengerTextView);
-            messengerImageView = (CircleImageView) itemView.findViewById(R.id.messengerImageView);
+            messageTextView = itemView.findViewById(R.id.messageTextView);
+            messageImageView = itemView.findViewById(R.id.messageImageView);
+            messengerTextView = itemView.findViewById(R.id.messengerTextView);
+            messengerImageView = itemView.findViewById(R.id.messengerImageView);
         }
     }
 
@@ -92,7 +79,7 @@ public class MainActivity extends AppCompatActivity
     private static final int REQUEST_INVITE = 1;
     private static final int REQUEST_IMAGE = 2;
     private static final String LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif";
-    public static final int DEFAULT_MSG_LENGTH_LIMIT = 10;
+    public static final int DEFAULT_MSG_LENGTH_LIMIT = 100;
     public static final String ANONYMOUS = "anonymous";
     private static final String MESSAGE_SENT_EVENT = "message_sent";
     private String mUsername;
@@ -145,104 +132,7 @@ public class MainActivity extends AppCompatActivity
         mLinearLayoutManager.setStackFromEnd(true);
         mMessageRecyclerView.setLayoutManager(mLinearLayoutManager);
 
-//        mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference();
-//        // SnapshotParser is a class through which you receive data anytime you read in firebase
-//        SnapshotParser<FriendlyMessage> parser = new SnapshotParser<FriendlyMessage>() {
-//            @NonNull
-//            @Override
-//            public FriendlyMessage parseSnapshot(@NonNull DataSnapshot snapshot) {
-//                FriendlyMessage friendlyMessage = snapshot.getValue(FriendlyMessage.class);
-//                if (friendlyMessage != null) {
-//                    friendlyMessage.setId(snapshot.getKey());
-//                }
-//                return friendlyMessage;
-//            }
-//        };
-//        DatabaseReference messagesRef = mFirebaseDatabaseReference.child(MESSAGES_CHILD);
-//        FirebaseRecyclerOptions<FriendlyMessage> options =
-//                new FirebaseRecyclerOptions.Builder<FriendlyMessage>()
-//                        .setQuery(messagesRef, parser)
-//                        .build();
-//        mFirebaseAdapter = new FirebaseRecyclerAdapter<FriendlyMessage, MessageViewHolder>(options) {
-//
-//            @NonNull
-//            @Override
-//            public MessageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-//                LayoutInflater inflater = LayoutInflater.from(parent.getContext());
-//                return new MessageViewHolder(inflater.inflate(R.layout.item_message, parent, false));
-//            }
-//
-//            @Override
-//            protected void onBindViewHolder(@NonNull final MessageViewHolder holder, int position, @NonNull FriendlyMessage model) {
-//                mProgressBar.setVisibility(View.INVISIBLE);
-//                if(model.getText() != null){
-//                    holder.messageTextView.setText(model.getText());
-//                    holder.messageTextView.setVisibility(TextView.VISIBLE);
-//                    holder.messageImageView.setVisibility(ImageView.GONE);
-//                } else if (model.getImageUrl() != null) {
-//                    String imageUrl = model.getImageUrl();
-//                    if (imageUrl.startsWith("gs://")) {
-//                        StorageReference storageReference = FirebaseStorage.getInstance()
-//                                .getReferenceFromUrl(imageUrl);
-//                        storageReference.getDownloadUrl().addOnCompleteListener(
-//                                new OnCompleteListener<Uri>() {
-//                                    @Override
-//                                    public void onComplete(@NonNull Task<Uri> task) {
-//                                        if (task.isSuccessful()) {
-//                                            String downloadUrl = task.getResult().toString();
-//                                            Glide.with(holder.messageImageView.getContext())
-//                                                    .load(downloadUrl)
-//                                                    .into(holder.messageImageView);
-//                                        } else {
-//                                            Log.w(TAG, "Getting download url was not successful.",
-//                                                    task.getException());
-//                                        }
-//                                    }
-//                                });
-//                    }else {
-//                        Glide.with(holder.messageImageView.getContext())
-//                                .load(model.getImageUrl())
-//                                .into(holder.messageImageView);
-//                    }
-//                    holder.messageImageView.setVisibility(ImageView.VISIBLE);
-//                    holder.messageTextView.setVisibility(TextView.GONE);
-//
-//                    holder.messengerTextView.setText(model.getName());
-//                    if(model.getPhotoUrl() == null){
-//                        holder.messengerImageView.setImageDrawable(ContextCompat.getDrawable(MainActivity.this,
-//                                R.drawable.ic_account_circle_black_36dp));
-//                    } else {
-//                        Glide.with(holder.messengerImageView.getContext())
-//                                .load(model.getPhotoUrl())
-//                                .into(holder.messageImageView);
-//                    }
-//                }
-//            }
-//        };
-//
-//        mFirebaseAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
-//            @Override
-//            public void onItemRangeInserted(int positionStart, int itemCount) {
-//                super.onItemRangeInserted(positionStart, itemCount);
-//                int friendlyMessageCount = mFirebaseAdapter.getItemCount();
-//                int lastVisiblePosition =
-//                        mLinearLayoutManager.findLastCompletelyVisibleItemPosition();
-//
-//                // If the recycler view is initially being loaded or the
-//                // user is at the bottom of the list, scroll to the bottom
-//                // of the list to show the newly added message.
-//
-//                if (lastVisiblePosition == -1 ||
-//                        (positionStart >= (friendlyMessageCount - 1) &&
-//                                lastVisiblePosition == (positionStart - 1))) {
-//                    mMessageRecyclerView.scrollToPosition(positionStart);
-//                }
-//            }
-//        });
-//
-//        mMessageRecyclerView.setAdapter(mFirebaseAdapter);
-
-        // New child entries
+        //Get messages from firebase database
         mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference();
         SnapshotParser<FriendlyMessage> parser = new SnapshotParser<FriendlyMessage>() {
             @NonNull
@@ -283,8 +173,7 @@ public class MainActivity extends AppCompatActivity
                     if (imageUrl.startsWith("gs://")) {
                         StorageReference storageReference = FirebaseStorage.getInstance()
                                 .getReferenceFromUrl(imageUrl);
-                        storageReference.getDownloadUrl().addOnCompleteListener(
-                                new OnCompleteListener<Uri>() {
+                        storageReference.getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>() {
                                     @Override
                                     public void onComplete(@NonNull Task<Uri> task) {
                                         if (task.isSuccessful()) {
@@ -341,7 +230,7 @@ public class MainActivity extends AppCompatActivity
 
         mMessageRecyclerView.setAdapter(mFirebaseAdapter);
 
-        mMessageEditText = (EditText) findViewById(R.id.messageEditText);
+        mMessageEditText = findViewById(R.id.messageEditText);
         mMessageEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(mSharedPreferences
                 .getInt(CodelabPreferences.FRIENDLY_MSG_LENGTH, DEFAULT_MSG_LENGTH_LIMIT))});
         mMessageEditText.addTextChangedListener(new TextWatcher() {
@@ -363,7 +252,7 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        mSendButton = (Button) findViewById(R.id.sendButton);
+        mSendButton = findViewById(R.id.sendButton);
         mSendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -377,13 +266,21 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        mAddMessageImageView = (ImageView) findViewById(R.id.addMessageImageView);
+        mAddMessageImageView = findViewById(R.id.addMessageImageView);
         mAddMessageImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 // Select image for image message on click.
             }
         });
+
+        FirebaseMessaging.getInstance().subscribeToTopic("news")
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        Log.d(TAG, "Subscribed to topic : news");
+                    }
+                });
     }
 
     @Override
